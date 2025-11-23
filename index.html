@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SanGoogle - Buscador Sagrado</title>
     <style>
         * {
@@ -173,6 +173,35 @@
             opacity: 0.8;
         }
 
+        /* Contador de visitas */
+        .visit-counter {
+            position: absolute;
+            bottom: 2%;
+            right: 3%;
+            background: rgba(0, 0, 0, 0.7);
+            color: #FFD700;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid rgba(218, 165, 32, 0.5);
+            font-size: 12px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .visit-counter .counter-label {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-bottom: 3px;
+        }
+
+        .visit-counter .counter-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
         /* Modo de ajuste - muestra coordenadas */
         .debug-info {
             position: fixed;
@@ -278,6 +307,11 @@
         </div>
     </div>
 
+    <div class="visit-counter" id="visitCounter">
+        <div class="counter-label">✝ Almas bendecidas ✝</div>
+        <div class="counter-number" id="counterNumber">...</div>
+    </div>
+
     <div class="no-image-message" id="noImageMessage">
         <p>⚠️ Coloca la imagen <strong>sangoogle.png</strong> en la misma carpeta que este archivo HTML</p>
         <p style="margin-top: 20px; font-size: 16px;">El buscador seguirá funcionando 🙏</p>
@@ -327,7 +361,56 @@
             setTimeout(() => {
                 document.getElementById('searchInput').focus();
             }, 500);
+            
+            // Inicializar contador de visitas
+            initVisitCounter();
         });
+
+        // Sistema de contador de visitas
+        async function initVisitCounter() {
+            const counterElement = document.getElementById('counterNumber');
+            
+            try {
+                // Obtener contador actual
+                const currentCount = await window.storage.get('visit_count', true);
+                let count = currentCount ? parseInt(currentCount.value) : 0;
+                
+                // Incrementar
+                count++;
+                
+                // Guardar nuevo valor (shared=true para que sea global)
+                await window.storage.set('visit_count', count.toString(), true);
+                
+                // Mostrar con animación
+                animateCounter(count);
+                
+            } catch (error) {
+                // Si falla el storage, usar contador local
+                let localCount = localStorage.getItem('sangoogle_visits') || 0;
+                localCount = parseInt(localCount) + 1;
+                localStorage.setItem('sangoogle_visits', localCount);
+                counterElement.textContent = localCount.toLocaleString();
+            }
+        }
+
+        // Animación del contador
+        function animateCounter(targetNumber) {
+            const counterElement = document.getElementById('counterNumber');
+            const duration = 1000; // 1 segundo
+            const steps = 30;
+            const increment = targetNumber / steps;
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= targetNumber) {
+                    counterElement.textContent = targetNumber.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    counterElement.textContent = Math.floor(current).toLocaleString();
+                }
+            }, duration / steps);
+        }
     
     </script>
 </body>
